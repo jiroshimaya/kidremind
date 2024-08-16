@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>アナログ時計付きリマインダーアプリ</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <svg id="clock" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="45" fill="none" stroke="black" stroke-width="2"/>
+            <line id="hour-hand" x1="50" y1="50" x2="50" y2="25" stroke="black" stroke-width="3" stroke-linecap="round"/>
+            <line id="minute-hand" x1="50" y1="50" x2="50" y2="20" stroke="red" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="50" cy="50" r="2" fill="black"/>
+        </svg>
+        <div id="reminder"></div>
+        <img id="image" src="" alt="リマインダー画像" style="max-width: 300px; max-height: 200px; object-fit: contain;">
+    </div>
+    <script src="{{ url_for('static', filename='js/clock.js') }}"></script>
+</body>
+</html>
