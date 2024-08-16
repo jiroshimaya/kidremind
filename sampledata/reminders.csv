@@ -1,0 +1,6 @@
+hour,minute,text,imagePath
+8,30,朝ごはんの時間,breakfast.png
+12,0,昼ごはんの時間,lunch.png
+15,0,おやつの時間,snack.png
+18,30,夕ごはんの時間,dinner.png
+20,0,お風呂の時間,bath.png
