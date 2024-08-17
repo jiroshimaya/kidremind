@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, send_from_directory
+from flask import Flask, render_template, jsonify, send_from_directory, request
 import csv
 from datetime import datetime
 import os
@@ -10,6 +10,19 @@ app = Flask(__name__)
 # CSVファイルのパスと画像ディレクトリを環境変数から取得
 CSV_FILE_PATH = os.environ.get('REMINDERS_CSV_PATH', 'data/reminders.csv')
 IMAGES_DIR = os.environ.get('IMAGES_DIR', 'data/images')
+# アクセス可能なIPアドレスを環境変数から取得
+ALLOWED_IPS = os.environ.get('ALLOWED_IPS', '127.0.0.1').split(',')
+
+def check_ip():
+    client_ip = request.remote_addr
+    if client_ip not in ALLOWED_IPS:
+        return jsonify({'error': 'Access denied'}), 403
+
+@app.before_request
+def before_request():
+    result = check_ip()
+    if result:
+        return result
 
 @app.route('/')
 def index():
