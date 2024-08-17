@@ -9,26 +9,90 @@ body {
 }
 
 .container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  height: 100vh;
   text-align: center;
   background-color: white;
-  padding: 20px;
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
 
+.clock-column, .content-column {
+  flex: 1;
+  width: 50%;
+  box-sizing: border-box;
+  padding: 10px;
+}
+
+.content-column {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
 #clock {
-  width: 300px;
-  height: 300px;
-  margin-bottom: 20px;
+  width: 100%;
+  height: auto;
 }
 
 #reminder {
-  font-size: 24px;
+  font-size: 96px;
   margin-bottom: 20px;
+  text-align: center;
 }
 
 #image {
-  max-width: 100%;
+  max-width: 50%;
   height: auto;
+  object-fit: contain;
   margin-bottom: 20px;
+}
+
+#current-time {
+  position: fixed;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 14px;
+  color: #666;
+}
+
+#clock-face {
+  fill: none;
+  stroke: black;
+  stroke-width: 2;
+}
+
+#hour-hand {
+  stroke: navy;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+#minute-hand {
+  stroke: red;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+#center-dot {
+  fill: black;
+}
+
+.clock-marker {
+  stroke: black;
+  stroke-width: 1;
+}
+
+.clock-number {
+  font-size: 10px;
+  text-anchor: middle;
+  dominant-baseline: middle;
 }

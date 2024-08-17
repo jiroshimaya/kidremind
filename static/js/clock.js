@@ -17,8 +17,7 @@ function createClockFace() {
         line.setAttribute('y1', y1);
         line.setAttribute('x2', x2);
         line.setAttribute('y2', y2);
-        line.setAttribute('stroke', 'black');
-        line.setAttribute('stroke-width', '2');
+        line.setAttribute('class', 'clock-marker');
         clock.appendChild(line);
         
         // 数字
@@ -27,9 +26,7 @@ function createClockFace() {
         const text = document.createElementNS(svgNS, 'text');
         text.setAttribute('x', textX);
         text.setAttribute('y', textY);
-        text.setAttribute('font-size', '6');
-        text.setAttribute('text-anchor', 'middle');
-        text.setAttribute('dominant-baseline', 'middle');
+        text.setAttribute('class', 'clock-number');
         text.textContent = i;
         clock.appendChild(text);
     }
@@ -62,9 +59,7 @@ function setClock(hours, minutes, seconds = 0) {
 function setReminder(hour, minute, text, imagePath) {
     // リマインダーテキストを更新
     const reminderElement = document.getElementById('reminder');
-    const displayHour = hour > 12 ? hour - 12 : hour;
-    const amPm = hour >= 12 ? 'PM' : 'AM';
-    reminderElement.textContent = `${displayHour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')} ${amPm} - ${text}`;
+    reminderElement.textContent = `${text}`;
 
     // 画像を更新
     const imageElement = document.getElementById('image');
@@ -77,7 +72,6 @@ function setReminder(hour, minute, text, imagePath) {
 
 // 時計の文字盤を作成
 createClockFace();
-
 
 // 1分ごとにリマインダーをロード
 setInterval(loadNextReminder, 60000);
