@@ -11,9 +11,11 @@ app = Flask(__name__)
 CSV_FILE_PATH = os.environ.get('REMINDERS_CSV_PATH', 'data/reminders.csv')
 IMAGES_DIR = os.environ.get('IMAGES_DIR', 'data/images')
 # アクセス可能なIPアドレスを環境変数から取得
-ALLOWED_IPS = os.environ.get('ALLOWED_IPS', '127.0.0.1').split(',')
+ALLOWED_IPS = os.environ.get('ALLOWED_IPS', '').split(',')
 
 def check_ip():
+    if not ALLOWED_IPS or ALLOWED_IPS == ['']:  # 環境変数が設定されていないか空の場合
+        return None  # すべてのIPからのアクセスを許可
     client_ip = request.remote_addr
     if client_ip not in ALLOWED_IPS:
         return jsonify({'error': 'Access denied'}), 403
@@ -88,4 +90,5 @@ def serve_image(filename):
     return send_from_directory(IMAGES_DIR, filename)
 
 if __name__ == '__main__':
-    app.run(debug=True, host="0.0.0.0", port=5001)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(debug=True, host="0.0.0.0", port=port)
