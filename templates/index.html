@@ -8,15 +8,35 @@
 </head>
 <body>
     <div class="container">
-        <svg id="clock" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="45" fill="none" stroke="black" stroke-width="2"/>
-            <line id="hour-hand" x1="50" y1="50" x2="50" y2="25" stroke="black" stroke-width="3" stroke-linecap="round"/>
-            <line id="minute-hand" x1="50" y1="50" x2="50" y2="20" stroke="red" stroke-width="2" stroke-linecap="round"/>
-            <circle cx="50" cy="50" r="2" fill="black"/>
-        </svg>
-        <div id="reminder"></div>
-        <img id="image" src="" alt="リマインダー画像" style="max-width: 300px; max-height: 200px; object-fit: contain;">
+        <div class="clock-column">
+            <svg id="clock" viewBox="0 0 100 100">
+                <circle id="clock-face" cx="50" cy="50" r="45"/>
+                <line id="hour-hand" x1="50" y1="50" x2="50" y2="25"/>
+                <line id="minute-hand" x1="50" y1="50" x2="50" y2="20"/>
+                <circle id="center-dot" cx="50" cy="50" r="2"/>
+            </svg>
+        </div>
+        <div class="content-column">
+            <div id="reminder"></div>
+            <img id="image" src="" alt="リマインダー画像">
+        </div>
     </div>
+    <div id="current-time"></div>
     <script src="{{ url_for('static', filename='js/clock.js') }}"></script>
+    <script>
+        function updateCurrentTime() {
+            fetch('/api/current-time')
+                .then(response => response.json())
+                .then(data => {
+                    const hours = String(data.hour).padStart(2, '0');
+                    const minutes = String(data.minute).padStart(2, '0');
+                    const seconds = String(data.second).padStart(2, '0');
+                    document.getElementById('current-time').textContent = `${hours}:${minutes}:${seconds}`;
+                })
+                .catch(error => console.error('Error:', error));
+        }
+        setInterval(updateCurrentTime, 1000);
+        updateCurrentTime();
+    </script>
 </body>
 </html>
