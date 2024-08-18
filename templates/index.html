@@ -4,7 +4,106 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>アナログ時計付きリマインダーアプリ</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        body {
+          font-family: Arial, sans-serif;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          margin: 0;
+          background-color: #f0f0f0;
+        }
+
+        .container {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 20px;
+          height: 100vh;
+          text-align: center;
+          background-color: white;
+          border-radius: 10px;
+          box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .clock-column, .content-column {
+          flex: 1;
+          width: 50%;
+          box-sizing: border-box;
+          padding: 10px;
+        }
+
+        .content-column {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          height: 100%;
+        }
+
+        #clock {
+          width: 100%;
+          height: auto;
+        }
+
+        #reminder {
+          font-size: 96px;
+          margin-bottom: 20px;
+          text-align: center;
+        }
+
+        #image {
+          max-width: 50%;
+          height: auto;
+          object-fit: contain;
+          margin-bottom: 20px;
+        }
+
+        #current-time {
+          position: fixed;
+          bottom: 10px;
+          left: 50%;
+          transform: translateX(-50%);
+          font-size: 14px;
+          color: #666;
+        }
+
+        #clock-face {
+          fill: none;
+          stroke: black;
+          stroke-width: 2;
+        }
+
+        #hour-hand {
+          stroke: navy;
+          stroke-width: 2;
+          stroke-linecap: round;
+        }
+
+        #minute-hand {
+          stroke: red;
+          stroke-width: 2;
+          stroke-linecap: round;
+        }
+
+        #center-dot {
+          fill: black;
+        }
+
+        .clock-marker {
+          stroke: black;
+          stroke-width: 1;
+        }
+
+        .clock-number {
+          font-size: 10px;
+          text-anchor: middle;
+          dominant-baseline: middle;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -22,8 +121,88 @@
         </div>
     </div>
     <div id="current-time"></div>
-    <script src="{{ url_for('static', filename='js/clock.js') }}"></script>
     <script>
+        let reminders = [];
+
+        function createClockFace() {
+            const clock = document.getElementById('clock');
+            const svgNS = "http://www.w3.org/2000/svg";
+
+            for (let i = 1; i <= 12; i++) {
+                const angle = (i * 30 - 90) * (Math.PI / 180);
+                const x1 = 50 + 40 * Math.cos(angle);
+                const y1 = 50 + 40 * Math.sin(angle);
+                const x2 = 50 + 45 * Math.cos(angle);
+                const y2 = 50 + 45 * Math.sin(angle);
+                
+                // マーカー
+                const line = document.createElementNS(svgNS, 'line');
+                line.setAttribute('x1', x1);
+                line.setAttribute('y1', y1);
+                line.setAttribute('x2', x2);
+                line.setAttribute('y2', y2);
+                line.setAttribute('class', 'clock-marker');
+                clock.appendChild(line);
+                
+                // 数字
+                const textX = 50 + 35 * Math.cos(angle);
+                const textY = 50 + 35 * Math.sin(angle);
+                const text = document.createElementNS(svgNS, 'text');
+                text.setAttribute('x', textX);
+                text.setAttribute('y', textY);
+                text.setAttribute('class', 'clock-number');
+                text.textContent = i;
+                clock.appendChild(text);
+            }
+        }
+
+        function loadNextReminder() {
+            fetch('/api/next_reminder')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.hour !== undefined) {
+                        setReminder(data.hour, data.minute, data.text, data.imagePath);
+                    } else {
+                        console.log('No reminders found');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function setClock(hours, minutes, seconds = 0) {
+            // 時計の針の角度を計算
+            const secondAngle = (seconds / 60) * 360;
+            const minuteAngle = ((minutes + seconds / 60) / 60) * 360;
+            const hourAngle = ((hours % 12 + minutes / 60) / 12) * 360;
+
+            // SVGの針を回転
+            document.getElementById('minute-hand').setAttribute('transform', `rotate(${minuteAngle}, 50, 50)`);
+            document.getElementById('hour-hand').setAttribute('transform', `rotate(${hourAngle}, 50, 50)`);
+        }
+
+        function setReminder(hour, minute, text, imagePath) {
+            // リマインダーテキストを更新
+            const reminderElement = document.getElementById('reminder');
+            reminderElement.textContent = `${text}`;
+
+            // 画像を更新
+            const imageElement = document.getElementById('image');
+            imageElement.src = imagePath;  // サーバーから受け取ったパスをそのまま使用
+            imageElement.alt = text;
+
+            // リマインダーの時刻に合わせて時計の針を設定
+            setClock(hour, minute, 0);
+        }
+
+        // 時計の文字盤を作成
+        createClockFace();
+
+        // 1分ごとにリマインダーをロード
+        setInterval(loadNextReminder, 60000);
+
+        // 初回のリマインダーロードと時計の更新
+        loadNextReminder();
+
         function updateCurrentTime() {
             fetch('/api/current-time')
                 .then(response => response.json())
