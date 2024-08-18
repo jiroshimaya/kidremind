@@ -103,6 +103,21 @@
           text-anchor: middle;
           dominant-baseline: middle;
         }
+
+        #debug-form {
+          display: none;
+          margin-top: 20px;
+        }
+
+        #debug-form input {
+          margin: 5px;
+          padding: 5px;
+        }
+
+        #debug-form button {
+          margin-top: 10px;
+          padding: 5px 10px;
+        }
     </style>
 </head>
 <body>
@@ -118,11 +133,20 @@
         <div class="content-column">
             <div id="reminder"></div>
             <img id="image" src="" alt="リマインダー画像">
+            <div id="debug-form">
+                <input type="number" id="debug-hour" placeholder="Hour">
+                <input type="number" id="debug-minute" placeholder="Minute">
+                <input type="text" id="debug-text" placeholder="Text">
+                <input type="text" id="debug-imagePath" placeholder="Image Path">
+                <button onclick="debugSetReminder()">Set Reminder</button>
+            </div>
         </div>
     </div>
     <div id="current-time"></div>
     <script>
         let reminders = [];
+        let isDebugMode = false;
+        let lastReminder = { hour: null, minute: null, text: '', imagePath: '' };
 
         function createClockFace() {
             const clock = document.getElementById('clock');
@@ -192,16 +216,28 @@
 
             // リマインダーの時刻に合わせて時計の針を設定
             setClock(hour, minute, 0);
+
+            // 最後のリマインダー情報を更新
+            lastReminder = { hour, minute, text, imagePath };
         }
 
         // 時計の文字盤を作成
         createClockFace();
 
-        // 1分ごとにリマインダーをロード
-        setInterval(loadNextReminder, 60000);
+        // URLのクエリパラメータを取得
+        const urlParams = new URLSearchParams(window.location.search);
 
-        // 初回のリマインダーロードと時計の更新
-        loadNextReminder();
+        // デバッグモードの判定
+        if (urlParams.get('debug') === 'true') {
+            isDebugMode = true;
+            document.getElementById('debug-form').style.display = 'block';
+            loadNextReminder();
+        } else {
+            // 1分ごとにリマインダーをロード（デバッグモードでない場合のみ）
+            setInterval(loadNextReminder, 60000);
+            // 初回のリマインダーロード
+            loadNextReminder();
+        }
 
         function updateCurrentTime() {
             fetch('/api/current-time')
@@ -216,6 +252,17 @@
         }
         setInterval(updateCurrentTime, 1000);
         updateCurrentTime();
+
+        function debugSetReminder() {
+            const hour = document.getElementById('debug-hour').value;
+            const minute = document.getElementById('debug-minute').value;
+            const text = document.getElementById('debug-text').value || lastReminder.text;
+            const imagePath = document.getElementById('debug-imagePath').value || lastReminder.imagePath;
+            setReminder(hour !== '' ? parseInt(hour) : lastReminder.hour, 
+                        minute !== '' ? parseInt(minute) : lastReminder.minute, 
+                        text, 
+                        imagePath);
+        }
     </script>
 </body>
 </html>
