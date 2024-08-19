@@ -30,8 +30,8 @@ def before_request():
 def index():
     return render_template('index.html')
 
-@app.route('/api/next_reminder')
-def get_next_reminder():
+@app.route('/api/reminders')
+def get_reminders():
     reminders = []
     try:
         with open(CSV_FILE_PATH, 'r') as csv_file:
@@ -41,49 +41,16 @@ def get_next_reminder():
                     'hour': int(row['hour']),
                     'minute': int(row['minute']),
                     'text': row['text'],
-                    'imagePath': row['imagePath']
+                    'imagePath': f"/images/{row['imagePath']}"
                 }
                 reminders.append(reminder)
         
         # 時刻でソート
         reminders.sort(key=lambda x: (x['hour'], x['minute']))
         
-        # 現在時刻を取得
-        now = datetime.now()
-        current_hour = now.hour
-        current_minute = now.minute
-        
-        # 次のリマインダーを見つける
-        next_reminder = None
-        for reminder in reminders:
-            if (reminder['hour'] > current_hour) or (reminder['hour'] == current_hour and reminder['minute'] > current_minute):
-                next_reminder = reminder
-                break
-        
-        # 次のリマインダーが見つからない場合、最初のリマインダーを次のリマインダーとする
-        if next_reminder is None and reminders:
-            next_reminder = reminders[0]
-        
-        if next_reminder:
-            return jsonify({
-                'hour': next_reminder['hour'],
-                'minute': next_reminder['minute'],
-                'text': next_reminder['text'],
-                'imagePath': f"/images/{next_reminder['imagePath']}"
-            })
-        else:
-            return jsonify({'message': 'No reminders found'}), 404
+        return jsonify(reminders)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
-@app.route('/api/current-time')
-def get_current_time():
-    now = datetime.now()
-    return jsonify({
-        'hour': now.hour,
-        'minute': now.minute,
-        'second': now.second
-    })
 
 @app.route('/images/<path:filename>')
 def serve_image(filename):

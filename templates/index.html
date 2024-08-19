@@ -118,9 +118,33 @@
           margin-top: 10px;
           padding: 5px 10px;
         }
+
+        .arrow-button {
+          font-size: 48px;
+          background: none;
+          border: none;
+          cursor: pointer;
+          padding: 10px;
+        }
+
+        .arrow-button-left {
+          position: fixed;
+          left: 20px;
+          top: 50%;
+          transform: translateY(-50%);
+        }
+
+        .arrow-button-right {
+          position: fixed;
+          right: 20px;
+          top: 50%;
+          transform: translateY(-50%);
+        }
     </style>
 </head>
 <body>
+    <button class="arrow-button arrow-button-left" onclick="showPreviousReminder()">&#8249;</button>
+    <button class="arrow-button arrow-button-right" onclick="showNextReminder()">&#8250;</button>
     <div class="container">
         <div class="clock-column">
             <svg id="clock" viewBox="0 0 100 100">
@@ -147,6 +171,7 @@
         let reminders = [];
         let isDebugMode = false;
         let lastReminder = { hour: null, minute: null, text: '', imagePath: '' };
+        let displayedReminderIndex = 0;
 
         function createClockFace() {
             const clock = document.getElementById('clock');
@@ -180,17 +205,86 @@
             }
         }
 
-        function loadNextReminder() {
-            fetch('/api/next_reminder')
+        function loadReminders() {
+            return fetch('/api/reminders')
                 .then(response => response.json())
                 .then(data => {
-                    if (data.hour !== undefined) {
-                        setReminder(data.hour, data.minute, data.text, data.imagePath);
+                    console.log('Reminders loaded:', data);
+                    return data;
+                })
+                .catch(error => {
+                    console.error('Error loading reminders:', error);
+                    reminders = []; // エラー時は空の配列を設定
+                    return [];
+                });
+        }
+
+        function calculateCurrentReminderIndex(reminders) {
+            const now = new Date();
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
+
+            const index = reminders.findIndex(reminder => 
+                reminder.hour > currentHour || 
+                (reminder.hour === currentHour && reminder.minute > currentMinute)
+            );
+
+            // 現在時刻が最後のリマインダーの時刻よりも遅い場合、index=0を返す
+            if (index === -1) {
+                return 0;
+            }
+
+            return index;
+        }
+
+        function setReminderByIndex(reminders, index) {
+            if (index >= 0 && index < reminders.length) {
+                const reminder = reminders[index];
+                setReminder(reminder.hour, reminder.minute, reminder.text, reminder.imagePath);
+                displayedReminderIndex = index;
+            } else {
+                console.log('Invalid reminder index');
+            }
+        }
+        
+        function loadAndShowCurrentReminder() {
+            loadReminders()
+                .then(loadedReminders => {
+                    if (loadedReminders.length > 0) {
+                        reminders = loadedReminders; // Update the global reminders array
+                        showCurrentReminder();
                     } else {
                         console.log('No reminders found');
                     }
                 })
                 .catch(error => console.error('Error:', error));
+        }
+
+        function showCurrentReminder() {
+            if (reminders.length > 0) {
+                const currentReminderIndex = calculateCurrentReminderIndex(reminders);
+                setReminderByIndex(reminders, currentReminderIndex);
+            } else {
+                console.log('No reminders available');
+            }
+        }
+
+        function showNextReminder() {
+            if (reminders.length > 0) {
+                displayedReminderIndex = (displayedReminderIndex + 1) % reminders.length;
+                setReminderByIndex(reminders, displayedReminderIndex);
+            } else {
+                console.log('No reminders available');
+            }
+        }
+
+        function showPreviousReminder() {
+            if (reminders.length > 0) {
+                displayedReminderIndex = (displayedReminderIndex - 1 + reminders.length) % reminders.length;
+                setReminderByIndex(reminders, displayedReminderIndex);
+            } else {
+                console.log('No reminders available');
+            }
         }
 
         function setClock(hours, minutes, seconds = 0) {
@@ -230,25 +324,21 @@
         // デバッグモードの判定
         if (urlParams.get('debug') === 'true') {
             isDebugMode = true;
-            document.getElementById('debug-form').style.display = 'block';
-            loadNextReminder();
+            document.getElementById('debug-form').style.display = 'block';            
         } else {
             // 1分ごとにリマインダーをロード（デバッグモードでない場合のみ）
-            setInterval(loadNextReminder, 60000);
-            // 初回のリマインダーロード
-            loadNextReminder();
+            setInterval(showCurrentReminder, 60000);
         }
+        // 初回のリマインダーロード
+        loadAndShowCurrentReminder();
+
 
         function updateCurrentTime() {
-            fetch('/api/current-time')
-                .then(response => response.json())
-                .then(data => {
-                    const hours = String(data.hour).padStart(2, '0');
-                    const minutes = String(data.minute).padStart(2, '0');
-                    const seconds = String(data.second).padStart(2, '0');
-                    document.getElementById('current-time').textContent = `${hours}:${minutes}:${seconds}`;
-                })
-                .catch(error => console.error('Error:', error));
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('current-time').textContent = `${hours}:${minutes}:${seconds}`;
         }
         setInterval(updateCurrentTime, 1000);
         updateCurrentTime();
